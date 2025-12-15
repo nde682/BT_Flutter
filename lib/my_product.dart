@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api.dart';
 import 'package:flutter_application_1/model/product.dart';
+// 1. IMPORT FILE GIỎ HÀNG VÀ MÀN HÌNH GIỎ HÀNG
+import 'package:flutter_application_1/model/cart.dart';
+import 'package:flutter_application_1/cart_screen.dart';
 
 class MyProduct extends StatefulWidget {
   const MyProduct({super.key});
@@ -10,6 +13,12 @@ class MyProduct extends StatefulWidget {
 }
 
 class _MyProductState extends State<MyProduct> {
+  late Future<List<Product>> _productsFuture;
+  @override
+  void initState() {
+    _productsFuture = testapi.getAllProduct();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,12 +27,56 @@ class _MyProductState extends State<MyProduct> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.shopping_cart))
+          // 2. ICON GIỎ HÀNG CÓ BADGE (SỐ LƯỢNG)
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                onPressed: () {
+                  // Chuyển sang màn hình giỏ hàng
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CartScreen()),
+                  ).then((value) {
+                    // Khi quay lại từ giỏ hàng, cập nhật lại số lượng (setState)
+                    setState(() {});
+                  });
+                },
+                icon: const Icon(Icons.shopping_cart),
+              ),
+              // Nếu giỏ hàng có đồ thì hiện chấm đỏ số lượng
+              if (cart.items.isNotEmpty)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${cart.getItemCount()}', // Lấy tổng số lượng từ cart
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+            ],
+          )
         ],
       ),
-      backgroundColor: Colors.grey[100], 
+      backgroundColor: Colors.grey[100],
       body: FutureBuilder<List<Product>>(
-        future: test_api.getAllProduct(),
+        future: _productsFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -46,7 +99,7 @@ class _MyProductState extends State<MyProduct> {
       padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, // 2 cột
-        childAspectRatio: 0.7, // Tỷ lệ chiều rộng/cao của 1 ô (càng nhỏ ô càng cao)
+        childAspectRatio: 0.7, // Tỷ lệ khung hình
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
@@ -59,13 +112,13 @@ class _MyProductState extends State<MyProduct> {
 
   Widget myItem(Product p) {
     return Card(
-      elevation: 2, // Độ đổ bóng
+      elevation: 2,
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Ảnh sản phẩm
+          // Ảnh sản phẩm
           Expanded(
             child: Container(
               width: double.infinity,
@@ -76,18 +129,17 @@ class _MyProductState extends State<MyProduct> {
               ),
               child: Image.network(
                 p.image,
-                fit: BoxFit.contain, // Giữ tỷ lệ ảnh
+                fit: BoxFit.contain, // Giữ tỷ lệ ảnh không bị méo
               ),
             ),
           ),
           
-          // 2. Thông tin sản phẩm
+          // Thông tin sản phẩm
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tên sản phẩm (giới hạn 2 dòng)
                 Text(
                   p.title,
                   maxLines: 2,
@@ -96,11 +148,10 @@ class _MyProductState extends State<MyProduct> {
                 ),
                 const SizedBox(height: 4),
                 
-                // Giá tiền
                 Text(
                   "\$${p.price}",
                   style: const TextStyle(
-                    color: Colors.redAccent, 
+                    color: Colors.deepOrange, 
                     fontWeight: FontWeight.bold, 
                     fontSize: 16
                   ),
@@ -108,7 +159,6 @@ class _MyProductState extends State<MyProduct> {
                 
                 const SizedBox(height: 4),
                 
-                // Rating và Count (Đã lấy được từ Product mà không cần class Rating)
                 Row(
                   children: [
                     const Icon(Icons.star, color: Colors.amber, size: 16),
@@ -121,16 +171,32 @@ class _MyProductState extends State<MyProduct> {
                       style: const TextStyle(fontSize: 12, color: Colors.grey)
                     ),
                     const Spacer(),
-                    // Nút thêm vào giỏ hàng nhỏ
+                    
+                    // 3. NÚT THÊM VÀO GIỎ HÀNG
                     InkWell(
-                      onTap: (){},
+                      onTap: (){
+                        setState(() {
+                          cart.addToCart(p); // Gọi hàm thêm vào Singleton cart
+                        });
+                        
+                        // Hiển thị thông báo nhỏ bên dưới
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Đã thêm ${p.title} vào giỏ"),
+                            duration: const Duration(seconds: 1),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: Colors.green,
+                          )
+                        );
+                      },
                       child: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
                           color: Colors.blueAccent,
                           shape: BoxShape.circle
                         ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 16),
+                        child: const Icon(Icons.add, color: Colors.white, size: 20),
                       ),
                     )
                   ],

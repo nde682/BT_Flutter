@@ -38,7 +38,7 @@ class _RegisterFormState extends State<RegisterForm> {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đăng nhập thành công'),
+          content: Text('Đăng ký thành công'),
           backgroundColor: Colors.green,
         ),
       );

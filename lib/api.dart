@@ -17,17 +17,17 @@ class Api {
         List data = response.data;
         products = data.map((json) => Product.fromJson(json)).toList();
       } else {
-        print("Lỗi API: ${response.statusMessage}");
+        // print("Lỗi API: ${response.statusMessage}");
       }
       return products;
     } catch (e) {
-      print("Lỗi kết nối: $e");
+      // print("Lỗi kết nối: $e");
       return []; // Trả về danh sách rỗng nếu lỗi
     }
   }
 }
 
-var test_api = Api();
+var testapi = Api();
 
 class NewsApi {
   final Dio _dio = Dio();
