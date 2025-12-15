@@ -18,7 +18,7 @@ class _Bmi extends State<Bmi> {
   double bmi = 0;
 
   void _calculateBMI() {
-    double height = double.parse(_heightController.text);
+    double height = double.parse(_heightController.text)/100;
     double width = double.parse(_widthController.text);
     setState(() {
       bmi = width / (height * height);
@@ -95,9 +95,9 @@ class _Bmi extends State<Bmi> {
                 ),
               ),
               const SizedBox(height: 20,),
-              Text("Chi số BMI: " + bmi.toStringAsFixed(2),style: TextStyle(fontSize: 20,color: Colors.red),),
+              Text("Chi số BMI: ${bmi.toStringAsFixed(2)}",style: TextStyle(fontSize: 20,color: Colors.red),),
               const SizedBox(height: 20,),
-              Text("Phân loại: " + _getBMIStatus(),style: TextStyle(fontSize: 15,color: Colors.red),),
+              Text("Phân loại: ${_getBMIStatus()}",style: TextStyle(fontSize: 15,color: Colors.red),),
             ],
           ),
           )
